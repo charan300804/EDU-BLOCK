@@ -1,7 +1,62 @@
+'use client';
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { BarChart, BookOpen, UserCheck, ShieldCheck } from "lucide-react";
+import { BarChart, BookOpen, UserCheck, ShieldCheck, Loader2 } from "lucide-react";
+import { useUser, useFirestore } from "@/firebase";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Role } from "@/lib/types";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function DashboardOverviewPage() {
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
+  const [isRoleLoading, setIsRoleLoading] = useState(true);
+
+  useEffect(() => {
+    if (isUserLoading || !firestore || !user) {
+      return;
+    }
+
+    const getRoleAndRedirect = async () => {
+      let userRole: Role | null = null;
+      try {
+        const collections: Role[] = ['admin', 'principal', 'employer', 'student'];
+        for (const role of collections) {
+          const userDoc = await getDoc(doc(firestore, `${role}s`, user.uid));
+          if (userDoc.exists()) {
+            userRole = role;
+            break;
+          }
+        }
+        
+        if (userRole) {
+          router.push(`/dashboard/${userRole}`);
+        } else {
+          // If role is not found, maybe default or show an error
+          console.error("User role not found in any collection.");
+          setIsRoleLoading(false); // Stop loading to show the overview page as a fallback
+        }
+      } catch (error) {
+        console.error("Error fetching user role, showing overview.", error);
+        setIsRoleLoading(false);
+      }
+    };
+    
+    getRoleAndRedirect();
+
+  }, [user, isUserLoading, router, firestore]);
+
+  if (isUserLoading || isRoleLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center bg-background p-4">
+        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+        <p className="mt-4 text-muted-foreground">Redirecting to your dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
         <div>
