@@ -4,62 +4,92 @@ This is a Next.js starter project for EduChain, a secure certificate verificatio
 
 ## Getting Started
 
-Follow these instructions to set up and run the project locally on your development machine.
+Follow these detailed instructions to set up and run the project locally on your development machine.
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-*   [Node.js](https://nodejs.org/) (v18 or later recommended)
-*   [npm](https://www.npmjs.com/) (which comes with Node.js)
-*   A Google account with a Firebase project.
+Before you begin, ensure you have the following installed on your system:
+*   **Node.js**: Version 18 or later is recommended. You can download it from [nodejs.org](https://nodejs.org/).
+*   **npm**: Node Package Manager, which is included with your Node.js installation.
+*   **A Google Account**: Required to create and manage the Firebase project that will serve as your backend.
 
-### 1. Environment Setup
+### 1. Firebase Project Setup
 
-This project uses Firebase for its backend and Genkit for AI features.
+This application requires a Firebase project to handle authentication and database services. The initial setup has already been configured to connect to a specific Firebase project.
 
-a. **Firebase Configuration**: The necessary Firebase client-side configuration is already included in `src/firebase/config.ts`. The application is set up to connect to this Firebase project automatically.
+- The client-side configuration is located in `src/firebase/config.ts`.
+- The backend services like Firestore and Authentication are automatically connected.
 
-b. **Genkit AI Configuration**: The AI features (like the Career Advisor) require a Google AI API key.
+### 2. Environment Variables for AI Features
 
-   - Create a `.env` file in the root of the project.
-   - Go to [Google AI Studio](https://aistudio.google.com/app/apikey) to get an API key.
-   - Add the key to your `.env` file:
+The application uses Genkit for its AI-powered Career Advisor feature, which requires an API key from Google AI.
+
+a. **Create a `.env` file**: In the root directory of the project, create a new file and name it `.env`.
+
+b. **Get your API Key**:
+   - Navigate to [Google AI Studio](https://aistudio.google.com/app/apikey).
+   - Sign in with your Google account.
+   - Click "Create API key" to generate a new key.
+
+c. **Add the Key to your `.env` file**:
+   - Open the `.env` file you just created.
+   - Add the following line, replacing `your_api_key_here` with the key you copied from Google AI Studio:
      ```
      GEMINI_API_KEY=your_api_key_here
      ```
 
-### 2. Install Dependencies
+### 3. Install Project Dependencies
 
-Open your terminal in the project's root directory and run the following command to install all the necessary packages:
+This command will download and install all the necessary packages and libraries that the project depends on to function correctly.
+
+- Open your terminal or command prompt.
+- Navigate to the root directory of the project.
+- Run the following command:
 
 ```bash
 npm install
 ```
 
-### 3. Run the Development Servers
+### 4. Run the Development Servers
 
-To run the application locally, you need to start two separate development servers in two separate terminal windows: one for the Next.js frontend and one for the Genkit AI flows.
+This application has a dual-server architecture: one server for the Next.js frontend and another for the Genkit AI services. You must start both in **separate terminal windows** for the application to be fully functional.
 
 **Terminal 1: Start the Next.js Frontend**
 
-This command starts the main web application.
+This server runs the main web application, including the user interface and all dashboards.
+
+- In your first terminal window, run:
 
 ```bash
 npm run dev
 ```
 
-The application will be available at [http://localhost:9002](http://localhost:9002).
+- **Expected Output**: You will see messages indicating that the server has started successfully, typically including:
+  ```
+  - ready started server on 0.0.0.0:9002, url: http://localhost:9002
+  ```
+- The frontend is now running and accessible at [http://localhost:9002](http://localhost:9002).
 
 **Terminal 2: Start the Genkit AI Server**
 
-This command starts the local server that runs the AI-powered flows, such as the career advisor.
+This server powers the AI flows, such as the Career Advisor. It listens for requests from the Next.js application.
+
+- Open a **new** terminal window (do not close the first one).
+- In the new terminal, run:
 
 ```bash
 npm run genkit:dev
 ```
 
-This server runs on a different port and is automatically called by the Next.js application when AI features are used.
+- **Expected Output**: You will see messages indicating that the Genkit server (the "Flow Server") is running, typically on port `3100`:
+  ```
+  [Flows] Flow Server is running at http://127.0.0.1:3100
+  ```
 
-### 4. Accessing the Application
+### 5. Accessing and Using the Application
 
-Once both servers are running, you can access the application by navigating to [http://localhost:9002](http://localhost:9002) in your web browser. You can now register new users, log in with different roles, and test all the features of the EduChain platform.
+With both servers running, you can now use the application:
+
+1.  Open your web browser and navigate to **[http://localhost:9002](http://localhost:9002)**.
+2.  You should see the EduChain login page.
+3.  You can now register new users, log in with different roles (Student, Principal, Employer, Admin), and test all the features of the platform.
