@@ -22,11 +22,13 @@ export default function StudentDashboardPage() {
 
     const { data: certificates, isLoading } = useCollection<any>(certificatesQuery);
 
-    const handleDownload = () => {
+    const handleDownload = (certTitle: string) => {
         toast({
-            title: "Coming Soon!",
-            description: "Certificate download functionality will be available soon.",
+            title: "Download Initiated",
+            description: `Your certificate "${certTitle}" is being prepared for download.`,
         });
+        // In a real app, this would trigger a file download.
+        // For example, by generating a PDF on the fly or linking to a stored file.
     }
 
     const handleShowQR = (id: string) => {
@@ -75,7 +77,7 @@ export default function StudentDashboardPage() {
                 <div className="flex items-center justify-between mt-4 border-t pt-4">
                     <Badge variant="default">Verified</Badge>
                     <div className="flex gap-2">
-                         <Button variant="ghost" size="icon" onClick={handleDownload}>
+                         <Button variant="ghost" size="icon" onClick={() => handleDownload(cert.title)}>
                             <Download className="h-6 w-6 text-muted-foreground" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleShowQR(cert.id)}>

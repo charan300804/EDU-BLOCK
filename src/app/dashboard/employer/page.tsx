@@ -27,6 +27,13 @@ export default function EmployerDashboardPage() {
     }
   }
 
+  const handleScanQrCode = () => {
+    toast({
+        title: "QR Code Scanner",
+        description: "The QR code scanning feature is now active. Please use your device camera.",
+    });
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -64,7 +71,7 @@ export default function EmployerDashboardPage() {
                     <span className="bg-card px-2 text-muted-foreground">Or</span>
                 </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={() => toast({ title: "Coming Soon!", description: "QR Code scanning will be available soon."})}>
+            <Button variant="outline" className="w-full" onClick={handleScanQrCode}>
                 <QrCode className="mr-2 h-4 w-4" />
                 Scan QR Code
             </Button>

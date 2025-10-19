@@ -14,14 +14,24 @@ import {
 import { ChevronDown, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export function UserNav() {
     const { user, signOut } = useAuth();
     const router = useRouter();
+    const { toast } = useToast();
 
     const handleLogout = async () => {
         await signOut();
         router.push('/');
+    }
+
+    const handleProfile = () => {
+        toast({ title: "Profile", description: "This will take you to the user profile page." });
+    }
+
+    const handleSettings = () => {
+        toast({ title: "Settings", description: "This will take you to the settings page." });
     }
 
     const getInitials = (name: string | null | undefined) => {
@@ -59,8 +69,8 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleProfile}>Profile</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSettings}>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
