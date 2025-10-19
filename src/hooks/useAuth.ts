@@ -19,24 +19,18 @@ export function useAuth() {
 
   const signUp = async (email: string, password: string, displayName: string, role: Role) => {
     if (!auth) throw new Error("Auth service not available");
+    // This creates the user in Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    const createdUser = userCredential.user;
 
-    await updateProfile(user, { 
+    // This adds the displayName to the Firebase Auth user profile
+    await updateProfile(createdUser, { 
       displayName: displayName,
-      photoURL: role, // Using photoURL to store role as a workaround
     });
     
-    // Create a user profile document in Firestore
-    if (firestore) {
-      const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName,
-        role: role,
-      });
-    }
+    // This part does not create a document in a `users` collection.
+    // The registration page and dashboard pages handle creating documents
+    // in the specific role collections (`employers`, `principals`, etc.).
 
     return userCredential;
   };

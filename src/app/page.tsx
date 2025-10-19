@@ -1,32 +1,66 @@
 'use client';
 import { LoginTabs } from "@/components/login-tabs";
 import { Logo } from "@/components/icons/logo";
-import { useUser } from "@/firebase";
-import { useEffect } from "react";
+import { useUser, useFirestore } from "@/firebase";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Role } from "@/lib/types";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
+  const [isRoleLoading, setIsRoleLoading] = useState(true);
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-        // This is a simplified role detection.
-        // In a real app, you'd get the role from custom claims or Firestore.
-        let role: Role = 'student'; // Default role
-        if (user.email?.includes('admin')) {
-            role = 'admin';
-        } else if (user.email?.includes('principal')) {
-            role = 'principal';
-        } else if (user.photoURL === 'employer') { // using photoURL as a hack for role
-            role = 'employer';
-        }
-        router.push(`/dashboard/${role}`);
+    if (isUserLoading || !firestore) {
+      return;
     }
-  }, [user, isUserLoading, router]);
 
-  if (isUserLoading || user) {
+    if (!user) {
+      setIsRoleLoading(false);
+      return;
+    }
+
+    const getRoleAndRedirect = async () => {
+      let userRole: Role = 'student'; // Default role
+      try {
+        // Check admins collection
+        let userDoc = await getDoc(doc(firestore, "admins", user.uid));
+        if (userDoc.exists()) {
+          userRole = 'admin';
+        } else {
+          // Check principals collection
+          userDoc = await getDoc(doc(firestore, "principals", user.uid));
+          if (userDoc.exists()) {
+            userRole = 'principal';
+          } else {
+            // Check employers collection
+            userDoc = await getDoc(doc(firestore, "employers", user.uid));
+            if (userDoc.exists()) {
+              userRole = 'employer';
+            } else {
+              // Check students collection last
+              userDoc = await getDoc(doc(firestore, "students", user.uid));
+              if (userDoc.exists()) {
+                userRole = 'student';
+              }
+            }
+          }
+        }
+        router.push(`/dashboard/${userRole}`);
+      } catch (error) {
+        console.error("Error fetching user role, defaulting to student.", error);
+        router.push('/dashboard/student');
+      }
+    };
+    
+    getRoleAndRedirect();
+
+  }, [user, isUserLoading, router, firestore]);
+
+  if (isUserLoading || user || isRoleLoading) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <Logo className="h-12 w-12 text-primary animate-pulse" />
