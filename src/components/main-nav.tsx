@@ -11,7 +11,7 @@ import { useUser } from '@/firebase';
 
 const navItems = {
     admin: [
-        { href: "/dashboard/admin", icon: <School />, label: "Manage Principals" },
+        { href: "/dashboard/admin", icon: <School />, label: "Dashboard" },
         { href: "/dashboard/admin/audit", icon: <Shield />, label: "Audit Logs" },
     ],
     principal: [
@@ -26,13 +26,12 @@ const navItems = {
     ]
 };
 
-function getRoleFromPath(pathname: string): Role {
+function getRoleFromPath(pathname: string): Role | null {
     const segment = pathname.split('/')[2];
     if (['admin', 'principal', 'student', 'employer'].includes(segment)) {
         return segment as Role;
     }
-    // Fallback or based on user data
-    return 'student';
+    return null;
 }
 
 export function MainNav() {
@@ -40,9 +39,9 @@ export function MainNav() {
     const { user } = useUser();
     
     // Determine role from URL or user data
-    const role: Role = getRoleFromPath(pathname);
+    const role: Role | null = getRoleFromPath(pathname);
     
-    const currentNavItems = navItems[role] || [];
+    const currentNavItems = role ? navItems[role] : [];
 
     if (!user) {
         return null; // Or a loading skeleton
@@ -58,14 +57,6 @@ export function MainNav() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={pathname === '/dashboard'} tooltip="Overview">
-                            <Link href="/dashboard">
-                                <Home />
-                                <span>Overview</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
                     {currentNavItems.map((item) => (
                         <SidebarMenuItem key={item.label}>
                             <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>

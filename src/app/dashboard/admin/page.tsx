@@ -18,8 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { setDoc } from "firebase/firestore";
+import { updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const principalSchema = z.object({
@@ -48,7 +47,7 @@ export default function AdminDashboardPage() {
     }, [firestore]);
 
     const { data: principals, isLoading: isLoadingPrincipals, refresh: refreshPrincipals } = useCollection<any>(principalsQuery);
-    const { data: pendingCertificates, isLoading: isLoadingCertificates, refresh: refreshCertificates } = useCollection<any>(pendingCertificatesQuery);
+    const { data: pendingCertificates, isLoading: isLoadingCertificates } = useCollection<any>(pendingCertificatesQuery);
 
     const form = useForm<PrincipalFormValues>({
         resolver: zodResolver(principalSchema),
@@ -67,7 +66,8 @@ export default function AdminDashboardPage() {
                     schoolName: values.schoolName,
                     status: "Active"
                 };
-                await setDoc(doc(firestore, "principals", userCredential.user.uid), principalData);
+                const principalRef = doc(firestore, "principals", userCredential.user.uid);
+                setDocumentNonBlocking(principalRef, principalData, { merge: false });
                 
                 toast({ title: "Principal Created", description: `Account for ${values.name} has been created.` });
                 form.reset();
@@ -99,24 +99,17 @@ export default function AdminDashboardPage() {
         }
         
         try {
-            // This is a simplified deletion. In a real app, you'd use a Cloud Function
-            // to handle this transactionally and to delete the auth user.
-            // We are simulating this on the client for this project.
-
             const batch = writeBatch(firestore);
 
-            // 1. Delete the principal document
             const principalRef = doc(firestore, "principals", principalId);
             batch.delete(principalRef);
 
-            // 2. Find and delete all students of this principal
             const studentsQuery = query(collection(firestore, "students"), where("principalId", "==", principalId));
             const studentsSnapshot = await getDocs(studentsQuery);
             studentsSnapshot.forEach(studentDoc => {
                 batch.delete(doc(firestore, "students", studentDoc.id));
             });
 
-            // 3. Find and delete all certificates issued by this principal
             const certsQuery = query(collection(firestore, "certificates"), where("principalId", "==", principalId));
             const certsSnapshot = await getDocs(certsQuery);
             certsSnapshot.forEach(certDoc => {
@@ -124,14 +117,9 @@ export default function AdminDashboardPage() {
             });
 
             await batch.commit();
-
-            // 4. (Conceptual) Delete the user from Firebase Auth
-            // This requires Admin SDK and should be done in a backend function.
-            // We'll call a conceptual client-side function for this demo.
             await deleteUserAccount(principalId);
             
             toast({ title: "Principal Deleted", description: "The principal and all their associated data have been removed." });
-            refreshPrincipals(); // Refresh the list
             
         } catch (error: any) {
             console.error("Deletion failed:", error);
