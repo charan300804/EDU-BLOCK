@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { MainNav } from "@/components/main-nav";
 import { Suspense } from "react";
-import { FirebaseClientProvider } from "@/firebase";
 
 export const metadata: Metadata = {
   title: "Dashboard - EduChain",
@@ -15,7 +14,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FirebaseClientProvider>
       <SidebarProvider>
         <div className="min-h-screen">
           <Sidebar>
@@ -30,6 +28,5 @@ export default function DashboardLayout({
           </SidebarInset>
         </div>
       </SidebarProvider>
-    </FirebaseClientProvider>
   );
 }
