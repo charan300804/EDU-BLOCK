@@ -6,9 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, CheckCircle, XCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useCollection } from "@/firebase/firestore/use-collection";
+import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, doc, where, getDocs, writeBatch } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
@@ -18,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { updateDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const principalSchema = z.object({
@@ -46,7 +45,7 @@ export default function AdminDashboardPage() {
         return query(collection(firestore, "certificates"), where("status", "==", "pending"));
     }, [firestore]);
 
-    const { data: principals, isLoading: isLoadingPrincipals, refresh: refreshPrincipals } = useCollection<any>(principalsQuery);
+    const { data: principals, isLoading: isLoadingPrincipals } = useCollection<any>(principalsQuery);
     const { data: pendingCertificates, isLoading: isLoadingCertificates } = useCollection<any>(pendingCertificatesQuery);
 
     const form = useForm<PrincipalFormValues>({
@@ -55,11 +54,11 @@ export default function AdminDashboardPage() {
     });
 
     async function onSubmit(values: PrincipalFormValues) {
-        if(!auth) return;
+        if(!auth || !firestore) return;
         try {
             const userCredential = await signUp(values.email, values.password, values.name, "principal");
 
-            if (userCredential?.user && firestore) {
+            if (userCredential?.user) {
                 const principalData = {
                     name: values.name,
                     email: values.email,
@@ -99,27 +98,24 @@ export default function AdminDashboardPage() {
         }
         
         try {
-            const batch = writeBatch(firestore);
-
-            const principalRef = doc(firestore, "principals", principalId);
-            batch.delete(principalRef);
-
+            // Non-blocking UI update, with async operations in background
+            deleteDocumentNonBlocking(doc(firestore, "principals", principalId));
+            
             const studentsQuery = query(collection(firestore, "students"), where("principalId", "==", principalId));
             const studentsSnapshot = await getDocs(studentsQuery);
             studentsSnapshot.forEach(studentDoc => {
-                batch.delete(doc(firestore, "students", studentDoc.id));
+                deleteDocumentNonBlocking(doc(firestore, "students", studentDoc.id));
             });
 
             const certsQuery = query(collection(firestore, "certificates"), where("principalId", "==", principalId));
             const certsSnapshot = await getDocs(certsQuery);
             certsSnapshot.forEach(certDoc => {
-                batch.delete(doc(firestore, "certificates", certDoc.id));
+                deleteDocumentNonBlocking(doc(firestore, "certificates", certDoc.id));
             });
 
-            await batch.commit();
             await deleteUserAccount(principalId);
             
-            toast({ title: "Principal Deleted", description: "The principal and all their associated data have been removed." });
+            toast({ title: "Principal Deletion Initiated", description: "The principal and their data will be removed shortly." });
             
         } catch (error: any) {
             console.error("Deletion failed:", error);
@@ -293,3 +289,5 @@ export default function AdminDashboardPage() {
         </div>
     );
 }
+
+    

@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { doc, setDoc } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
@@ -59,16 +59,20 @@ export default function EmployerRegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore) {
+        toast({ title: "Registration Failed", description: "Database service is not ready.", variant: "destructive" });
+        return;
+    }
     try {
       const userCredential = await signUp(values.email, values.password, values.companyName, "employer");
-      if (userCredential?.user && firestore) {
+      if (userCredential?.user) {
           const employerData = {
               companyName: values.companyName,
               email: values.email,
           };
           setDocumentNonBlocking(doc(firestore, "employers", userCredential.user.uid), employerData, { merge: true });
           toast({ title: "Registration Successful", description: "Redirecting to your dashboard..." });
-          router.push("/dashboard/employer");
+          router.push("/dashboard");
       }
     } catch (error: any) {
       toast({ title: "Registration Failed", description: error.message, variant: "destructive" });
@@ -151,3 +155,5 @@ export default function EmployerRegisterPage() {
     </main>
   );
 }
+
+    

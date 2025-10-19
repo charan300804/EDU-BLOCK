@@ -312,3 +312,5 @@
     "reasoning": "The Firestore structure is designed for a role-based system. Each user role (Admin, Principal, Student, Employer) has its own top-level collection for clear data separation and security rule simplicity. The `students` collection is now top-level, with a `principalId` field to maintain the link to their institution, which simplifies queries for admins and principals. The `certificates` collection is heavily denormalized, storing a snapshot of student information at the time of issuance. This is critical for historical accuracy and simplifies the verification process, as a certificate document contains all necessary information for display without requiring joins or lookups to the student record."
   }
 }
+
+    

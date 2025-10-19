@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PlusCircle, UserPlus, Fingerprint, User, MoreVertical } from "lucide-react";
-import { useFirestore, useUser, useCollection } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
+import { useCollection } from "@/firebase/firestore/use-collection";
 import { collection, serverTimestamp, doc, setDoc, addDoc, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo } from "react";
@@ -13,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
@@ -50,7 +51,7 @@ export default function PrincipalDashboardPage() {
     return query(collection(firestore, "students"), where("principalId", "==", user.uid));
   }, [firestore, user]);
 
-  const { data: students, isLoading: isLoadingStudents, refresh: refreshStudents } = useCollection<any>(studentsQuery);
+  const { data: students, isLoading: isLoadingStudents } = useCollection<any>(studentsQuery);
 
   const studentForm = useForm<CreateStudentFormValues>({
     resolver: zodResolver(createStudentSchema),
@@ -85,7 +86,7 @@ export default function PrincipalDashboardPage() {
       status: "pending",
     };
     try {
-        await addDoc(collection(firestore, "certificates"), certificateData);
+        addDocumentNonBlocking(collection(firestore, "certificates"), certificateData);
         toast({ title: "Certificate Submitted", description: `Your request to issue "${values.title}" has been sent for admin approval.` });
         certificateForm.reset();
     } catch(error: any) {
@@ -121,28 +122,17 @@ export default function PrincipalDashboardPage() {
   const handleDeleteStudent = async (studentId: string, studentEmail: string) => {
       if(!firestore || !auth) return;
       try {
-        // Simplified deletion for demo purposes.
-        // In production, this would be a transactional Cloud Function.
-        const batch = writeBatch(firestore);
+        deleteDocumentNonBlocking(doc(firestore, "students", studentId));
 
-        // 1. Delete student document
-        const studentRef = doc(firestore, "students", studentId);
-        batch.delete(studentRef);
-
-        // 2. Find and delete certificates for this student
         const certsQuery = query(collection(firestore, "certificates"), where("studentId", "==", studentId));
         const certsSnapshot = await getDocs(certsQuery);
         certsSnapshot.forEach(certDoc => {
-          batch.delete(doc(firestore, "certificates", certDoc.id));
+          deleteDocumentNonBlocking(doc(firestore, "certificates", certDoc.id));
         });
 
-        await batch.commit();
-
-        // 3. Delete the auth user (conceptual, requires admin privileges)
         await deleteUserAccount(studentId);
 
-        toast({ title: "Student Deleted", description: "The student and all their certificates have been deleted." });
-        refreshStudents(); // Refresh the list
+        toast({ title: "Student Deletion Initiated", description: "The student account and related certificates will be removed shortly." });
       } catch (error: any) {
         console.error("Student deletion error:", error);
         toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
@@ -287,3 +277,5 @@ export default function PrincipalDashboardPage() {
     </div>
   );
 }
+
+    
