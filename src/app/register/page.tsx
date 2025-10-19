@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/logo";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { doc, setDoc } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const formSchema = z.object({
   companyName: z.string().min(2, {
@@ -39,6 +44,10 @@ const formSchema = z.object({
 
 export default function EmployerRegisterPage() {
   const router = useRouter();
+  const { signUp } = useAuth();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,10 +57,21 @@ export default function EmployerRegisterPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Registering employer...", values);
-    // Simulate successful registration and redirect
-    router.push("/dashboard/employer");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await signUp(values.email, values.password, values.companyName, "employer");
+      if (userCredential?.user && firestore) {
+          const employerData = {
+              companyName: values.companyName,
+              email: values.email,
+          };
+          setDocumentNonBlocking(doc(firestore, "employers", userCredential.user.uid), employerData, { merge: true });
+          toast({ title: "Registration Successful", description: "Redirecting to your dashboard..." });
+          router.push("/dashboard/employer");
+      }
+    } catch (error: any) {
+      toast({ title: "Registration Failed", description: error.message, variant: "destructive" });
+    }
   }
 
   return (
@@ -113,8 +133,8 @@ export default function EmployerRegisterPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                  Create Account
+                <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </Form>

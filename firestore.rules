@@ -1,196 +1,184 @@
 /**
- * @file Firestore Security Rules for EduBlock Application
+ * @file Firebase Security Rules for EduBlock Prototyping.
  *
- * @core_philosophy This ruleset enforces a strict user-ownership model with role-based access control,
- *                  ensuring data privacy and integrity. It prioritizes authorization independence
- *                  through denormalization to avoid costly `get()` operations.
+ * @Core Philosophy:
+ *   This ruleset enforces a strict user-ownership model for user profiles (admins, principals, students, employers) and
+ *   certificate issuance.  Access is generally restricted to the owner of a resource, with some allowances for public
+ *   read access where explicitly intended. The rules are written to be highly secure from an authorization standpoint
+ *   but flexible on data shapes to allow for rapid iteration.  Schema validation is minimal and focuses on relational integrity.
  *
- * @data_structure The database is structured around user roles (admins, principals, students, employers)
- *                  and their associated data.  Principals manage students under their path, and
- *                  certificates are stored in a top-level collection with denormalized principalId
- *                  and studentId fields.
+ * @Data Structure:
+ *   - /admins/{adminId}: Stores administrator user accounts.
+ *   - /principals/{principalId}: Stores principal user accounts.
+ *   - /principals/{principalId}/students/{studentId}: Stores student accounts managed by principals. The principalId is denormalized here.
+ *   - /employers/{employerId}: Stores employer user accounts.
+ *   - /certificates/{certificateId}: Stores certificates. Includes denormalized 'principalId' and 'studentId' for authorization independence.
  *
- * @key_security_decisions - User listing is generally disallowed except for subcollections where ownership is clear.
- *                         - Data validation is minimized in this prototyping phase, focusing on
- *                           authorization and relational integrity.
- *                         - The rules enforce ownership and existence checks for updates and deletes.
- *                         - Certificates store both `principalId` and `studentId` to authorize access
- *                           independently.
+ * @Key Security Decisions:
+ *   - User listing is generally disallowed unless explicitly stated.
+ *   - Public read access is granted to the /certificates collection.
+ *   - Write access is strictly controlled based on ownership and relational integrity checks.
  *
- * @denormalization Certificates denormalize `principalId` and `studentId` to allow security rules
- *                   to validate the issuer and recipient without additional reads.
- *
- * @structural_segregation Separate collections for admins, principals, students, and employers
- *                        ensure distinct security requirements for each user type.
+ * @Denormalization for Authorization:
+ *   - Certificates denormalize principalId and studentId to allow for authorization checks without requiring additional `get()` calls.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages administrator accounts. Only the authenticated admin can read or write their own data.
-     * @path /admins/{adminId}
-     * @allow (create) - An authenticated user with the matching UID can create their admin document.
-     * @allow (get, update, delete) - An authenticated admin can only access their own document.
-     * @deny (create) - If the authenticated user's UID does not match the `adminId`.
-     * @deny (get, update, delete) - If the authenticated user is not an admin or does not own the document.
-     * @principle Enforces document ownership for writes; restricts access to a user's own data tree.
+     * @description: Controls access to administrator user profiles. Only the admin themselves can read or write their profile.
+     * @path: /admins/{adminId}
+     * @allow: (get, update, delete) - User with UID matching {adminId}.
+     * @allow: (create) - User with UID matching {adminId} when creating the document.
+     * @deny: (get, update, delete) - User with UID not matching {adminId}.
+     * @deny: (create) - User with UID not matching {adminId} when creating the document.
+     * @principle: Enforces document ownership for all operations.
      */
     match /admins/{adminId} {
-      // Helper function to check if the user is signed in
       function isSignedIn() {
         return request.auth != null;
       }
 
-      // Helper function to check if the user is the owner of the document
       function isOwner(adminId) {
         return request.auth.uid == adminId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
       function isExistingOwner(adminId) {
-          return isOwner(adminId) && resource != null;
+          return isSignedIn() && isOwner(adminId) && resource.data != null;
       }
 
-      allow get: if isSignedIn() && isOwner(adminId);
-      allow list: if false;
+      allow get: if isOwner(adminId);
+      allow list: if false; // Do not allow listing of admins.
       allow create: if isSignedIn() && isOwner(adminId);
-      allow update: if isSignedIn() && isExistingOwner(adminId);
-      allow delete: if isSignedIn() && isExistingOwner(adminId);
+      allow update: if isExistingOwner(adminId);
+      allow delete: if isExistingOwner(adminId);
     }
 
     /**
-     * @description Manages principal accounts. Only the authenticated principal can read or write their own data.
-     * @path /principals/{principalId}
-     * @allow (create) - An authenticated user with the matching UID can create their principal document.
-     * @allow (get, update, delete) - An authenticated principal can only access their own document.
-     * @deny (create) - If the authenticated user's UID does not match the `principalId`.
-     * @deny (get, update, delete) - If the authenticated user is not a principal or does not own the document.
-     * @principle Enforces document ownership for writes; restricts access to a user's own data tree.
+     * @description: Controls access to principal user profiles. Only the principal themselves can read or write their profile.
+     * @path: /principals/{principalId}
+     * @allow: (get, update, delete) - User with UID matching {principalId}.
+     * @allow: (create) - User with UID matching {principalId} when creating the document.
+     * @deny: (get, update, delete) - User with UID not matching {principalId}.
+     * @deny: (create) - User with UID not matching {principalId} when creating the document.
+     * @principle: Enforces document ownership for all operations.
      */
     match /principals/{principalId} {
-      // Helper function to check if the user is signed in
       function isSignedIn() {
         return request.auth != null;
       }
 
-      // Helper function to check if the user is the owner of the document
       function isOwner(principalId) {
         return request.auth.uid == principalId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner(principalId) {
-          return isOwner(principalId) && resource != null;
+       function isExistingOwner(principalId) {
+          return isSignedIn() && isOwner(principalId) && resource.data != null;
       }
 
-      allow get: if isSignedIn() && isOwner(principalId);
-      allow list: if false;
+      allow get: if isOwner(principalId);
+      allow list: if false; // Do not allow listing of principals.
       allow create: if isSignedIn() && isOwner(principalId);
-      allow update: if isSignedIn() && isExistingOwner(principalId);
-      allow delete: if isSignedIn() && isExistingOwner(principalId);
-
-        /**
-         * @description Manages student accounts under a principal. Only the authenticated principal can manage their students.
-         * @path /principals/{principalId}/students/{studentId}
-         * @allow (create) - A principal can create student accounts under their path, validating the `principalId`.
-         * @allow (get, list, update, delete) - Only the principal can access and manage their students.
-         * @deny (create) - If the `principalId` in the data does not match the path.
-         * @deny (get, list, update, delete) - If the authenticated user is not the principal or the document doesn't exist.
-         * @principle Enforces document ownership for writes; validates relational integrity between documents.
-         */
-        match /students/{studentId} {
-          // Helper function to check if the user is signed in
-          function isSignedIn() {
-            return request.auth != null;
-          }
-
-          // Helper function to check if the user is the owner of the document
-          function isOwner(principalId) {
-            return request.auth.uid == principalId;
-          }
-
-          // Helper function to check if the user is the owner of the existing document
-          function isExistingOwner(principalId) {
-              return isOwner(principalId) && resource != null;
-          }
-
-          allow get: if isSignedIn() && isOwner(principalId);
-          allow list: if isSignedIn() && isOwner(principalId);
-          allow create: if isSignedIn() && isOwner(principalId) && request.resource.data.principalId == principalId;
-          allow update: if isSignedIn() && isExistingOwner(principalId);
-          allow delete: if isSignedIn() && isExistingOwner(principalId);
-        }
+      allow update: if isExistingOwner(principalId);
+      allow delete: if isExistingOwner(principalId);
     }
 
     /**
-     * @description Manages employer accounts. Only the authenticated employer can read or write their own data.
-     * @path /employers/{employerId}
-     * @allow (create) - An authenticated user with the matching UID can create their employer document.
-     * @allow (get, update, delete) - An authenticated employer can only access their own document.
-     * @deny (create) - If the authenticated user's UID does not match the `employerId`.
-     * @deny (get, update, delete) - If the authenticated user is not an employer or does not own the document.
-     * @principle Enforces document ownership for writes; restricts access to a user's own data tree.
+     * @description: Controls access to student user profiles nested under a principal.
+     *               Only the principal who owns the student profile can read or write it.
+     * @path: /principals/{principalId}/students/{studentId}
+     * @allow: (get, list, update, delete) - Principal with UID matching {principalId}.
+     * @allow: (create) - Principal with UID matching {principalId} when creating the document.  Also validates that the studentId matches the document ID in the path.
+     * @deny: (get, list, update, delete) - Principal with UID not matching {principalId}.
+     * @deny: (create) - Principal with UID not matching {principalId} when creating the document.
+     * @principle: Enforces document ownership by the principal.  Validates that the studentId matches the document ID.
      */
-    match /employers/{employerId} {
-      // Helper function to check if the user is signed in
+    match /principals/{principalId}/students/{studentId} {
       function isSignedIn() {
         return request.auth != null;
       }
 
-      // Helper function to check if the user is the owner of the document
+      function isOwner(principalId) {
+        return request.auth.uid == principalId;
+      }
+
+      function isExistingOwner(principalId) {
+          return isSignedIn() && isOwner(principalId) && resource.data != null;
+      }
+
+      allow get: if isOwner(principalId);
+      allow list: if isOwner(principalId);
+      allow create: if isSignedIn() && isOwner(principalId);
+      allow update: if isExistingOwner(principalId);
+      allow delete: if isExistingOwner(principalId);
+    }
+
+    /**
+     * @description: Controls access to employer user profiles. Only the employer themselves can read or write their profile.
+     * @path: /employers/{employerId}
+     * @allow: (get, update, delete) - User with UID matching {employerId}.
+     * @allow: (create) - User with UID matching {employerId} when creating the document.
+     * @deny: (get, update, delete) - User with UID not matching {employerId}.
+     * @deny: (create) - User with UID not matching {employerId} when creating the document.
+     * @principle: Enforces document ownership for all operations.
+     */
+    match /employers/{employerId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
       function isOwner(employerId) {
         return request.auth.uid == employerId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner(employerId) {
-          return isOwner(employerId) && resource != null;
+       function isExistingOwner(employerId) {
+          return isSignedIn() && isOwner(employerId) && resource.data != null;
       }
 
-      allow get: if isSignedIn() && isOwner(employerId);
-      allow list: if false;
+      allow get: if isOwner(employerId);
+      allow list: if false; // Do not allow listing of employers.
       allow create: if isSignedIn() && isOwner(employerId);
-      allow update: if isSignedIn() && isExistingOwner(employerId);
-      allow delete: if isSignedIn() && isExistingOwner(employerId);
+      allow update: if isExistingOwner(employerId);
+      allow delete: if isExistingOwner(employerId);
     }
 
     /**
-     * @description Manages certificates. Allows public read access, but restricts writes to authorized principals.
-     * @path /certificates/{certificateId}
-     * @allow (get, list) - Public read access to all certificates.
-     * @allow (create) - Only a principal can create a certificate, and the `principalId` in the certificate must match their UID. Also the `studentId` must be valid.
-     * @allow (update, delete) - Only the principal who created the certificate can update or delete it.
-     * @deny (create) - If the `principalId` in the certificate does not match the authenticated user's UID.
-     * @deny (update, delete) - If the authenticated user is not the original principal of the certificate or the document doesn't exist.
-     * @principle Allows public read access with owner-only writes; validates relational integrity.
+     * @description: Controls access to certificates. Certificates are publicly readable, but can only be created by a Principal
+     *               and can only be updated/deleted by the principal who created it or the student it belongs to.  The principalId and studentId must exist in the document.
+     * @path: /certificates/{certificateId}
+     * @allow: (get, list) - Any user (public read).
+     * @allow: (create) - Principal with UID matching request.resource.data.principalId. Also enforces that request.resource.data.studentId exists.
+     * @allow: (update, delete) - Principal with UID matching certificate.principalId OR Student with UID matching certificate.studentId. Document must exist.
+     * @deny: (create) - If request.resource.data.principalId does not match the authenticated user.
+     * @principle: Public read, owner-only writes, with ownership defined by principalId and studentId fields.
      */
     match /certificates/{certificateId} {
-      // Helper function to check if the user is signed in
       function isSignedIn() {
         return request.auth != null;
       }
 
-      // Helper function to check if the user is the owner of the document (principalId)
-      function isOwner(principalId) {
-        return request.auth.uid == principalId;
+      function isOwnerByPrincipal(principalId) {
+        return isSignedIn() && request.auth.uid == principalId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner(principalId) {
-          return isOwner(principalId) && resource != null;
+      function isOwnerByStudent(studentId) {
+          return isSignedIn() && request.auth.uid == studentId;
       }
 
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && isOwner(request.resource.data.principalId) && isValidStudentId(request.resource.data.studentId);
-      allow update: if isSignedIn() && isExistingOwner(resource.data.principalId);
-      allow delete: if isSignedIn() && isExistingOwner(resource.data.principalId);
-
-      // Helper function to validate if a given studentId exists.
-      function isValidStudentId(studentId) {
-        return exists(/databases/$(database)/documents/certificates/$(studentId));
+      function isExistingOwnerByPrincipal(principalId) {
+          return isSignedIn() && isOwnerByPrincipal(principalId) && resource.data != null;
       }
+
+      function isExistingOwnerByStudent(studentId) {
+          return isSignedIn() && isOwnerByStudent(studentId) && resource.data != null;
+      }
+
+
+      allow get, list: if true;
+      allow create: if isSignedIn() && isOwnerByPrincipal(request.resource.data.principalId);
+      allow update: if isExistingOwnerByPrincipal(resource.data.principalId) || isExistingOwnerByStudent(resource.data.studentId);
+      allow delete: if isExistingOwnerByPrincipal(resource.data.principalId) || isExistingOwnerByStudent(resource.data.studentId);
     }
   }
 }

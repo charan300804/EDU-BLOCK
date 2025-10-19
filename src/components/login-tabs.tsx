@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +24,8 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import type { Role } from "@/lib/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -62,6 +63,9 @@ export function LoginTabs() {
 
 function LoginForm({ role }: { role: Role }) {
   const router = useRouter();
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,10 +74,14 @@ function LoginForm({ role }: { role: Role }) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(`Logging in as ${role}...`, values);
-    // Simulate successful login and redirect
-    router.push(`/dashboard/${role}`);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await signIn(values.email, values.password);
+      toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
+      router.push(`/dashboard/${role}`);
+    } catch (error: any) {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+    }
   }
 
   return (
@@ -111,8 +119,8 @@ function LoginForm({ role }: { role: Role }) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Log In
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Logging In..." : "Log In"}
             </Button>
             {role === 'employer' && (
                 <div className="mt-4 text-center text-sm">

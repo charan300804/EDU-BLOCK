@@ -1,5 +1,4 @@
-// @ts-nocheck
-"use client"
+'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -8,15 +7,23 @@ import { Label } from "@/components/ui/label";
 import { QrCode, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmployerDashboardPage() {
   const router = useRouter();
   const [certificateId, setCertificateId] = useState('');
+  const { toast } = useToast();
 
-  const handleVerification = (e) => {
+  const handleVerification = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if(certificateId) {
       router.push(`/verify/${certificateId}`);
+    } else {
+        toast({
+            title: "Certificate ID required",
+            description: "Please enter a certificate ID to verify.",
+            variant: "destructive",
+        });
     }
   }
 
@@ -57,7 +64,7 @@ export default function EmployerDashboardPage() {
                     <span className="bg-card px-2 text-muted-foreground">Or</span>
                 </div>
             </div>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => toast({ title: "Coming Soon!", description: "QR Code scanning will be available soon."})}>
                 <QrCode className="mr-2 h-4 w-4" />
                 Scan QR Code
             </Button>

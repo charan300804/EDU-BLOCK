@@ -1,39 +1,52 @@
-
-"use client"
+'use client';
 
 import { usePathname } from 'next/navigation';
-import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel } from './ui/sidebar';
+import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarFooter } from './ui/sidebar';
 import { Logo } from './icons/logo';
 import { UserNav } from './user-nav';
-import { Home, Shield, School, GraduationCap, Briefcase, ChevronDown, UserPlus } from 'lucide-react';
+import { Home, Shield, School, GraduationCap, Briefcase, UserPlus } from 'lucide-react';
 import type { Role } from '@/lib/types';
 import Link from 'next/link';
+import { useUser } from '@/firebase';
 
 const navItems = {
     admin: [
-        { href: "/dashboard/admin", icon: <Home />, label: "Dashboard" },
         { href: "/dashboard/admin", icon: <School />, label: "Manage Principals" },
-        { href: "/dashboard/admin", icon: <Shield />, label: "Audit Logs" },
+        { href: "/dashboard/admin/audit", icon: <Shield />, label: "Audit Logs" },
     ],
     principal: [
         { href: "/dashboard/principal", icon: <Home />, label: "Dashboard" },
-        { href: "/dashboard/principal", icon: <GraduationCap />, label: "Issue Certificate" },
-        { href: "/dashboard/principal", icon: <UserPlus />, label: "Create Student" },
     ],
     student: [
-        { href: "/dashboard/student", icon: <Home />, label: "My Certificates" },
-        { href: "/dashboard/student", icon: <Briefcase />, label: "Career Guidance" },
+        { href: "/dashboard/student", icon: <GraduationCap />, label: "My Certificates" },
+        { href: "/dashboard/student/career", icon: <Briefcase />, label: "Career Guidance" },
     ],
     employer: [
         { href: "/dashboard/employer", icon: <Home />, label: "Verify Certificate" },
     ]
+};
+
+function getRoleFromPath(pathname: string): Role {
+    const segment = pathname.split('/')[2];
+    if (['admin', 'principal', 'student', 'employer'].includes(segment)) {
+        return segment as Role;
+    }
+    // Fallback or based on user data
+    return 'student';
 }
 
 export function MainNav() {
     const pathname = usePathname();
-    // FIXME: This is a mock role based on URL, replace with real auth state
-    const role: Role = (pathname.split('/')[2] as Role) || 'student';
-    const currentNavItems = navItems[role] || navItems.student;
+    const { user } = useUser();
+    
+    // Determine role from URL or user data
+    const role: Role = getRoleFromPath(pathname);
+    
+    const currentNavItems = navItems[role] || [];
+
+    if (!user) {
+        return null; // Or a loading skeleton
+    }
 
     return (
         <>
@@ -45,9 +58,17 @@ export function MainNav() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === '/dashboard'} tooltip="Overview">
+                            <Link href="/dashboard">
+                                <Home />
+                                <span>Overview</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
                     {currentNavItems.map((item) => (
                         <SidebarMenuItem key={item.label}>
-                            <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+                            <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
                                 <Link href={item.href}>
                                     {item.icon}
                                     <span>{item.label}</span>
