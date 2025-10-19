@@ -2,10 +2,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Fingerprint, Calendar, User, Award, AlertTriangle, Percent, GraduationCap, Phone } from "lucide-react";
+import { Fingerprint, Calendar, User, Award, AlertTriangle, Percent, GraduationCap, Phone, Download, QrCode } from "lucide-react";
 import { useUser, useFirestore, useCollection } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const statusConfig = {
     approved: { variant: "default", text: "Approved", icon: <Award className="h-10 w-10 text-primary"/> },
@@ -17,6 +20,7 @@ const statusConfig = {
 export default function StudentDashboardPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const certificatesQuery = useMemo(() => {
         if (!user || !firestore) return null;
@@ -24,6 +28,13 @@ export default function StudentDashboardPage() {
     }, [user, firestore]);
 
     const { data: certificates, isLoading } = useCollection<any>(certificatesQuery);
+
+    const handleAction = (title: string, message: string) => {
+        toast({
+            title: title,
+            description: message,
+        });
+    }
 
   return (
     <div className="space-y-8">
@@ -44,6 +55,8 @@ export default function StudentDashboardPage() {
         )}
         {certificates && certificates.map((cert) => {
             const config = statusConfig[cert.status as keyof typeof statusConfig] || statusConfig.pending;
+            const isApproved = cert.status === 'approved';
+            
             return (
               <Card key={cert.id} className="flex flex-col">
                 <CardHeader className="flex-row gap-4 items-start">
@@ -71,6 +84,30 @@ export default function StudentDashboardPage() {
                     </div>
                     <div className="flex items-center justify-between mt-4 border-t pt-4">
                         <Badge variant={config.variant as any}>{config.text}</Badge>
+                        {isApproved && (
+                           <div className="flex gap-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm"><QrCode className="mr-2 h-4 w-4"/>Show QR Code</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Certificate QR Code</DialogTitle>
+                                            <DialogDescription>
+                                                Employers can scan this to verify your certificate instantly. This QR code represents your unique certificate ID.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="flex justify-center p-4">
+                                            {/* In a real app, you would generate a QR code from cert.id */}
+                                            <div className="w-48 h-48 bg-gray-200 flex items-center justify-center">
+                                                <p className="text-muted-foreground text-sm">QR Code for {cert.id}</p>
+                                            </div>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button size="sm" onClick={() => handleAction('Download Certificate', 'This would start a PDF download of your certificate.')}><Download className="mr-2 h-4 w-4"/>Download</Button>
+                           </div>
+                        )}
                     </div>
                 </CardContent>
               </Card>
