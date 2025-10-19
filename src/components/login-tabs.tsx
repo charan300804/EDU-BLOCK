@@ -78,7 +78,7 @@ function LoginForm({ role }: { role: Role }) {
     try {
       await signIn(values.email, values.password);
       toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
-      router.push(`/dashboard/${role}`);
+      router.push(`/dashboard`);
     } catch (error: any) {
       toast({ title: "Login Failed", description: error.message, variant: "destructive" });
     }
