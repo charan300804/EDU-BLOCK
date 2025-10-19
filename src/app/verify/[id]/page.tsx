@@ -11,19 +11,26 @@ import { doc } from "firebase/firestore";
 import { useMemo } from "react";
 
 const statusConfig = {
-    Valid: {
+    approved: {
         icon: <CheckCircle className="h-16 w-16 text-green-500" />,
         title: "Certificate is Valid",
-        description: "The certificate's integrity has been verified on the blockchain.",
+        description: "The certificate's integrity has been verified.",
         variant: "default",
-        badgeText: "Verified"
+        badgeText: "Verified & Approved"
     },
-    Tampered: {
+    pending: {
         icon: <AlertTriangle className="h-16 w-16 text-yellow-500" />,
-        title: "Certificate Tampered",
-        description: "The certificate's data does not match its blockchain record. It may have been altered.",
+        title: "Verification Pending",
+        description: "This certificate has been issued but is awaiting admin approval.",
+        variant: "secondary",
+        badgeText: "Pending Approval"
+    },
+    rejected: {
+        icon: <XCircle className="h-16 w-16 text-red-500" />,
+        title: "Certificate Rejected",
+        description: "This certificate was rejected by an administrator and is not valid.",
         variant: "destructive",
-        badgeText: "Tampered"
+        badgeText: "Rejected"
     },
     "Not Found": {
         icon: <XCircle className="h-16 w-16 text-red-500" />,
@@ -48,15 +55,14 @@ export default function VerificationPage({ params }: { params: { id: string } })
   const getStatus = () => {
     if (isLoading) return null;
     if (certificate) {
-        // In a real app, you would verify the hash on a blockchain.
-        // Here we simulate it. Assume all found certs are valid.
-        return "Valid";
+        // Return the certificate's actual status
+        return certificate.status;
     }
     return "Not Found";
   }
 
   const status = getStatus();
-  const config = status ? statusConfig[status] : null;
+  const config = status ? statusConfig[status as keyof typeof statusConfig] : null;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -80,7 +86,7 @@ export default function VerificationPage({ params }: { params: { id: string } })
                 <Badge variant={config.variant as any} className="text-sm">{config.badgeText}</Badge>
             </div>}
 
-          {status === "Valid" && certificate && (
+          {status === "approved" && certificate && (
             <div className="text-left p-4 border rounded-lg bg-muted/50 space-y-2">
               <p><strong>Certificate Title:</strong> {certificate.title}</p>
               <p><strong>Student ID:</strong> {certificate.studentId}</p>

@@ -148,6 +148,15 @@
         "blockchainTxId": {
           "type": "string",
           "description": "The transaction ID on the blockchain where the certificate hash is stored."
+        },
+        "status": {
+          "type": "string",
+          "description": "The approval status of the certificate.",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
         }
       },
       "required": [
@@ -156,7 +165,8 @@
         "studentId",
         "principalId",
         "timestamp",
-        "hash"
+        "hash",
+        "status"
       ]
     }
   },

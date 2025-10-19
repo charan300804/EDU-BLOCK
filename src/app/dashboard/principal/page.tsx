@@ -10,12 +10,11 @@ import { useFirestore, useUser, useCollection } from "@/firebase";
 import { collection, serverTimestamp, doc, setDoc, addDoc, query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 export default function PrincipalDashboardPage() {
   const firestore = useFirestore();
@@ -52,14 +51,15 @@ export default function PrincipalDashboardPage() {
       timestamp: serverTimestamp(),
       hash: "0x" + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
       blockchainTxId: "0x" + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      status: "pending", // Default status
     };
     try {
         await addDoc(collection(firestore, "certificates"), certificateData);
-        toast({ title: "Certificate Issued", description: `Certificate "${certTitle}" issued to student.` });
+        toast({ title: "Certificate Submitted", description: `Your request to issue "${certTitle}" has been sent for admin approval.` });
         setSelectedStudentId('');
         setCertTitle('');
     } catch(error: any) {
-        toast({ title: "Error Issuing Certificate", description: error.message, variant: "destructive" });
+        toast({ title: "Error Submitting Certificate", description: error.message, variant: "destructive" });
     }
   };
 
@@ -156,7 +156,7 @@ export default function PrincipalDashboardPage() {
             <form onSubmit={handleIssueCertificate}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><PlusCircle className="h-5 w-5"/> Issue a New Certificate</CardTitle>
-                <CardDescription>Fill in the details to issue a new certificate to a student.</CardDescription>
+                <CardDescription>Fill in the details to submit a new certificate for admin approval.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -179,7 +179,7 @@ export default function PrincipalDashboardPage() {
                 </div>
                 <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={!selectedStudentId || !certTitle}>
                   <Fingerprint className="mr-2 h-4 w-4" />
-                  Generate Hash & Issue Certificate
+                  Submit for Approval
                 </Button>
               </CardContent>
             </form>
