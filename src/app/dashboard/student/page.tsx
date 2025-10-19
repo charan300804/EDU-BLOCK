@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { QrCode, Fingerprint, Calendar, User, Award, Download } from "lucide-react";
-import { CareerAdvisor } from "@/components/career-advisor";
 import { useUser, useFirestore, useCollection } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -89,8 +88,6 @@ export default function StudentDashboardPage() {
           </Card>
         ))}
       </div>
-
-      {certificates && <CareerAdvisor certificates={certificates.map(c => c.title)} />}
     </div>
   );
 }
