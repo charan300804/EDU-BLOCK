@@ -1,0 +1,258 @@
+{
+  "entities": {
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Admin entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the administrator.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Principal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Principal",
+      "type": "object",
+      "description": "Represents a principal user in the system, typically associated with an educational institution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Principal entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the principal."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the principal.",
+          "format": "email"
+        },
+        "schoolName": {
+          "type": "string",
+          "description": "The name of the school the principal is associated with."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "schoolName"
+      ]
+    },
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Student entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the student."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the student.",
+          "format": "email"
+        },
+        "principalId": {
+          "type": "string",
+          "description": "Reference to Principal. (Relationship: Principal 1:N Student)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "principalId"
+      ]
+    },
+    "Employer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Employer",
+      "type": "object",
+      "description": "Represents an employer user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Employer entity."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the company."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the employer.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "companyName",
+        "email"
+      ]
+    },
+    "Certificate": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Certificate",
+      "type": "object",
+      "description": "Represents an educational certificate issued to a student.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Certificate entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the certificate (e.g., B.Tech CSE)."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N Certificate)"
+        },
+        "principalId": {
+          "type": "string",
+          "description": "Reference to Principal. (Relationship: Principal 1:N Certificate)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp when the certificate was issued.",
+          "format": "date-time"
+        },
+        "hash": {
+          "type": "string",
+          "description": "The hash of the certificate data."
+        },
+        "blockchainTxId": {
+          "type": "string",
+          "description": "The transaction ID on the blockchain where the certificate hash is stored."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "studentId",
+        "principalId",
+        "timestamp",
+        "hash"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Stores administrator user accounts.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "Unique identifier for the administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/principals/{principalId}",
+        "definition": {
+          "entityName": "Principal",
+          "schema": {
+            "$ref": "#/backend/entities/Principal"
+          },
+          "description": "Stores principal user accounts.",
+          "params": [
+            {
+              "name": "principalId",
+              "description": "Unique identifier for the principal."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/principals/{principalId}/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Stores student accounts managed by principals. The principalId is denormalized here.",
+          "params": [
+            {
+              "name": "principalId",
+              "description": "Unique identifier for the principal."
+            },
+            {
+              "name": "studentId",
+              "description": "Unique identifier for the student."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/employers/{employerId}",
+        "definition": {
+          "entityName": "Employer",
+          "schema": {
+            "$ref": "#/backend/entities/Employer"
+          },
+          "description": "Stores employer user accounts.",
+          "params": [
+            {
+              "name": "employerId",
+              "description": "Unique identifier for the employer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/certificates/{certificateId}",
+        "definition": {
+          "entityName": "Certificate",
+          "schema": {
+            "$ref": "#/backend/entities/Certificate"
+          },
+          "description": "Stores certificates. Includes denormalized 'principalId' and 'studentId' for authorization independence.",
+          "params": [
+            {
+              "name": "certificateId",
+              "description": "Unique identifier for the certificate."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a role-based access control (RBAC) system for the EduBlock application, focusing on secure certificate management and verification. The structure prioritizes authorization independence to ensure robust security rules and atomic operations. Key design decisions include path-based ownership for user-related data, structural segregation for data with different access needs, and denormalization of authorization context to avoid `get()` calls in security rules.\n\n**Authorization Independence:**\n*   The `certificates` collection denormalizes `principalId` and `studentId`. This allows security rules to validate that the principal issuing the certificate and the student to whom the certificate is issued exist, without needing to perform expensive `get()` operations to traverse the database hierarchy.\n\n**Structural Segregation:**\n*   Separate collections are used for `admins`, `principals`, `students` and `employers` to ensure each user type has distinct security requirements.\n\n**Access Modeling:**\n*   Path-based ownership is used for `students` owned by `principals` (`/principals/{principalId}/students/{studentId}`). Certificates are directly linked to students in the `certificates` collection via the `studentId` field, which allows for simple queries to retrieve certificates for a specific student.\n\n**Query Authorization Predictability (QAPs):**\n*   The structure facilitates secure `list` operations. For example, a Principal can securely list students they own under `/principals/{principalId}/students`. A student can query only their certificates using `studentId` and roles cannot be enumerated.\n\n**Invariants:**\n*   The structure supports invariants such as ownership and timestamp integrity. Security rules can ensure that the `principalId` and `studentId` in the `certificates` collection are valid and match existing Principal and Student documents. Timestamps can be validated to ensure they are within acceptable ranges."
+  }
+}
