@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -81,7 +82,7 @@ export default function EmployerRegisterPage() {
             <Link href="/" className="flex flex-col items-center gap-4">
                 <Logo className="h-12 w-12 text-primary" />
                 <div className="text-center">
-                    <h1 className="font-headline text-3xl font-bold text-foreground">EduChain</h1>
+                    <h1 className="font-headline text-3xl font-bold text-foreground">EduBlock</h1>
                     <p className="text-muted-foreground">Secure Certificate Verification on the Blockchain</p>
                 </div>
             </Link>

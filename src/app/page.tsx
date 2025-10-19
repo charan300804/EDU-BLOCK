@@ -1,3 +1,4 @@
+
 'use client';
 import { LoginTabs } from "@/components/login-tabs";
 import { Logo } from "@/components/icons/logo";
@@ -49,7 +50,7 @@ export default function LoginPage() {
             }
           }
         }
-        router.push(`/dashboard/${userRole}`);
+        router.push(`/dashboard`);
       } catch (error) {
         console.error("Error fetching user role, defaulting to student.", error);
         router.push('/dashboard/student');
@@ -75,7 +76,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center justify-center gap-4 mb-8">
             <Logo className="h-12 w-12 text-primary" />
             <div className="text-center">
-                <h1 className="font-headline text-3xl font-bold text-foreground">EduChain</h1>
+                <h1 className="font-headline text-3xl font-bold text-foreground">EduBlock</h1>
                 <p className="text-muted-foreground">Secure Certificate Verification on the Blockchain</p>
             </div>
         </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +83,7 @@ export default function VerificationPage({ params }: { params: { id: string } })
         <div className="absolute top-8 flex items-center justify-center gap-4">
             <Link href="/" className="flex items-center gap-2">
                 <Logo className="h-8 w-8 text-primary" />
-                <span className="font-headline text-2xl font-bold text-foreground">EduChain</span>
+                <span className="font-headline text-2xl font-bold text-foreground">EduBlock</span>
             </Link>
         </div>
       <Card className="w-full max-w-lg text-center shadow-2xl">

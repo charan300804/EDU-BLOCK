@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -52,7 +53,7 @@ export function MainNav() {
             <SidebarHeader className='p-4'>
                 <Link href="/dashboard" className="flex items-center gap-2">
                   <Logo className="h-8 w-8 text-primary" />
-                  <span className="font-headline text-xl font-semibold text-foreground">EduChain</span>
+                  <span className="font-headline text-xl font-semibold text-foreground">EduBlock</span>
                 </Link>
             </SidebarHeader>
             <SidebarContent>

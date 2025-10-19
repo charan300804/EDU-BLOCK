@@ -1,6 +1,7 @@
-# Firebase Studio Project: EduChain
 
-Welcome to EduChain! This is a secure certificate verification platform built with Next.js, Firebase, and Genkit. This guide provides a detailed, beginner-friendly walkthrough to get the application running on your local development machine.
+# Firebase Studio Project: EduBlock
+
+Welcome to EduBlock! This is a secure certificate verification platform built with Next.js, Firebase, and Genkit. This guide provides a detailed, beginner-friendly walkthrough to get the application running on your local development machine.
 
 ## Table of Contents
 
@@ -28,7 +29,7 @@ Because of this structure, you will need to run **two separate commands in two s
 
 ## Application Workflow and User Roles
 
-EduChain is a role-based system designed for the secure creation, management, and verification of educational certificates. Here’s how the application flows and what each role can do.
+EduBlock is a role-based system designed for the secure creation, management, and verification of educational certificates. Here’s how the application flows and what each role can do.
 
 ### General Workflow
 
@@ -221,7 +222,7 @@ With both servers running, you can now explore the full application:
 
 1.  Open your web browser (like Chrome, Firefox, or Safari).
 2.  Navigate to the URL from your first terminal: **[http://localhost:9002](http://localhost:9002)**.
-3.  You should see the EduChain login page.
+3.  You should see the EduBlock login page.
 4.  You can now register new users, log in with different roles (Student, Principal, Employer, Admin), and test all the features of the platform.
 
-Enjoy using EduChain!
+Enjoy using EduBlock!
