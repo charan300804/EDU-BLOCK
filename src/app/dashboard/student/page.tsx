@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, Fingerprint, Calendar, User, Award, Download, AlertTriangle } from "lucide-react";
+import { QrCode, Fingerprint, Calendar, User, Award, Download, AlertTriangle, Percent, GraduationCap, Phone } from "lucide-react";
 import { useUser, useFirestore, useCollection } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -23,7 +23,6 @@ export default function StudentDashboardPage() {
 
     const certificatesQuery = useMemo(() => {
         if (!user || !firestore) return null;
-        // Show all certificates, including pending and rejected, so student knows their status.
         return query(collection(firestore, 'certificates'), where('studentId', '==', user.uid));
     }, [user, firestore]);
 
@@ -68,7 +67,14 @@ export default function StudentDashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         {isLoading && <p>Loading certificates...</p>}
-        {certificates && certificates.length === 0 && <p>No certificates issued yet.</p>}
+        {certificates && certificates.length === 0 && (
+            <Card className="col-span-full">
+                <CardHeader>
+                    <CardTitle>No Certificates Issued</CardTitle>
+                    <CardDescription>You do not have any certificates yet. Once your principal issues one, it will appear here.</CardDescription>
+                </CardHeader>
+            </Card>
+        )}
         {certificates && certificates.map((cert) => {
             const config = statusConfig[cert.status as keyof typeof statusConfig] || statusConfig.pending;
             return (
@@ -79,20 +85,19 @@ export default function StudentDashboardPage() {
                     </div>
                     <div>
                         <CardTitle className="font-headline text-xl">{cert.title}</CardTitle>
-                        <CardDescription>Issued by Principal ID: {cert.principalId.substring(0, 8)}...</CardDescription>
+                        <CardDescription>Issued for {cert.branch}</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4 flex-grow flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center text-sm text-muted-foreground gap-2 mb-1">
-                            <User className="h-4 w-4" />
-                            <span>Student ID: {cert.studentId.substring(0,8)}...</span>
+                        <div className="text-sm text-muted-foreground space-y-2">
+                            <div className="flex items-center gap-2"><User className="h-4 w-4" /><span>Roll Number: {cert.rollNumber}</span></div>
+                            <div className="flex items-center gap-2"><GraduationCap className="h-4 w-4" /><span>Passing Year: {cert.passingYear}</span></div>
+                            <div className="flex items-center gap-2"><Percent className="h-4 w-4" /><span>Percentage: {cert.passingPercentage}%</span></div>
+                            <div className="flex items-center gap-2"><Phone className="h-4 w-4" /><span>Contact: {cert.mobileNumber}</span></div>
+                            <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>Issued: {cert.timestamp ? new Date(cert.timestamp.seconds * 1000).toLocaleDateString() : 'N/A'}</span></div>
                         </div>
-                        <div className="flex items-center text-sm text-muted-foreground gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Issued on: {cert.timestamp ? new Date(cert.timestamp.seconds * 1000).toLocaleDateString() : 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-muted-foreground gap-2 mt-2">
+                        <div className="flex items-center text-sm text-muted-foreground gap-2 mt-4 pt-4 border-t">
                             <Fingerprint className="h-4 w-4" />
                             <span className="font-mono text-xs truncate">Hash: {cert.hash}</span>
                         </div>

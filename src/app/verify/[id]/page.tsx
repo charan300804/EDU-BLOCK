@@ -2,13 +2,13 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, XCircle, AlertTriangle, Fingerprint, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Fingerprint, Loader2, Calendar, User, GraduationCap, Percent, Phone, Building } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from '@/components/icons/logo';
 import { Button } from "@/components/ui/button";
 import { useDoc, useFirestore } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { useMemo } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useMemo, useState } from "react";
 
 const statusConfig = {
     approved: {
@@ -44,6 +44,7 @@ const statusConfig = {
 
 export default function VerificationPage({ params }: { params: { id: string } }) {
   const firestore = useFirestore();
+  const [principal, setPrincipal] = useState<any>(null);
   
   const certRef = useMemo(() => {
     if (!firestore || !params.id) return null;
@@ -52,10 +53,22 @@ export default function VerificationPage({ params }: { params: { id: string } })
 
   const { data: certificate, isLoading } = useDoc<any>(certRef);
 
+  useEffect(() => {
+    if (certificate && firestore) {
+      const fetchPrincipal = async () => {
+        const principalRef = doc(firestore, "principals", certificate.principalId);
+        const principalSnap = await getDoc(principalRef);
+        if (principalSnap.exists()) {
+          setPrincipal(principalSnap.data());
+        }
+      };
+      fetchPrincipal();
+    }
+  }, [certificate, firestore]);
+
   const getStatus = () => {
     if (isLoading) return null;
     if (certificate) {
-        // Return the certificate's actual status
         return certificate.status;
     }
     return "Not Found";
@@ -87,12 +100,23 @@ export default function VerificationPage({ params }: { params: { id: string } })
             </div>}
 
           {status === "approved" && certificate && (
-            <div className="text-left p-4 border rounded-lg bg-muted/50 space-y-2">
-              <p><strong>Certificate Title:</strong> {certificate.title}</p>
-              <p><strong>Student ID:</strong> {certificate.studentId}</p>
-              <p><strong>Issued By Principal ID:</strong> {certificate.principalId}</p>
-              <p><strong>Issued On:</strong> {certificate.timestamp ? new Date(certificate.timestamp.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
-              <p className="flex items-center gap-2">
+            <div className="text-left p-4 border rounded-lg bg-muted/50 space-y-3">
+              <h3 className="font-bold text-lg text-center mb-2">{certificate.title}</h3>
+              <p><strong>Student Name:</strong> {certificate.studentName}</p>
+              <p><strong>Student Email:</strong> {certificate.studentEmail}</p>
+              <p><strong>Roll Number:</strong> {certificate.rollNumber}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 mt-2 border-t">
+                  <p className="flex items-center gap-2"><GraduationCap className="h-4 w-4 text-muted-foreground"/><strong>Branch:</strong> {certificate.branch}</p>
+                  <p className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground"/><strong>Year:</strong> {certificate.passingYear}</p>
+                  <p className="flex items-center gap-2"><Percent className="h-4 w-4 text-muted-foreground"/><strong>Percentage:</strong> {certificate.passingPercentage}%</p>
+                  <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground"/><strong>Contact:</strong> {certificate.mobileNumber}</p>
+              </div>
+              {principal && (
+                <div className="pt-2 mt-2 border-t">
+                    <p className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground"/><strong>Issued By:</strong> {principal.schoolName}</p>
+                </div>
+              )}
+              <p className="flex items-center gap-2 pt-2 mt-2 border-t">
                 <Fingerprint className="h-4 w-4 text-muted-foreground" />
                 <strong>Blockchain Hash:</strong> 
                 <span className="truncate font-mono text-sm">{certificate.hash}</span>

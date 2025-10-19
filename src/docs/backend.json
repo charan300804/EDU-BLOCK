@@ -1,0 +1,314 @@
+{
+  "entities": {
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Admin entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the administrator.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Principal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Principal",
+      "type": "object",
+      "description": "Represents a principal user in the system, typically associated with an educational institution.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Principal entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the principal."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the principal.",
+          "format": "email"
+        },
+        "schoolName": {
+          "type": "string",
+          "description": "The name of the school the principal is associated with."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "schoolName"
+      ]
+    },
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Student entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the student."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the student.",
+          "format": "email"
+        },
+        "principalId": {
+          "type": "string",
+          "description": "Reference to the Principal who manages this student."
+        },
+        "rollNumber": {
+          "type": "string",
+          "description": "The student's official roll number."
+        },
+        "branch": {
+          "type": "string",
+          "description": "The academic branch or stream of the student (e.g., Computer Science)."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "The student's mobile phone number."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "principalId",
+        "rollNumber",
+        "branch",
+        "mobileNumber"
+      ]
+    },
+    "Employer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Employer",
+      "type": "object",
+      "description": "Represents an employer user in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Employer entity."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "The name of the company."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the employer.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "companyName",
+        "email"
+      ]
+    },
+    "Certificate": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Certificate",
+      "type": "object",
+      "description": "Represents an educational certificate issued to a student. Contains denormalized student data for historical accuracy and easy display.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Certificate entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the certificate (e.g., B.Tech Computer Science)."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to the Student to whom the certificate was issued."
+        },
+        "principalId": {
+          "type": "string",
+          "description": "Reference to the Principal who issued the certificate."
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Denormalized name of the student at the time of issuance."
+        },
+        "studentEmail": {
+          "type": "string",
+          "description": "Denormalized email of the student at the time of issuance."
+        },
+        "rollNumber": {
+          "type": "string",
+          "description": "Denormalized roll number of the student."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "Denormalized mobile number of the student."
+        },
+        "branch": {
+          "type": "string",
+          "description": "Denormalized academic branch of the student."
+        },
+        "passingYear": {
+          "type": "number",
+          "description": "The year the student passed the course."
+        },
+        "passingPercentage": {
+          "type": "number",
+          "description": "The final percentage achieved by the student."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The server timestamp when the certificate was issued.",
+          "format": "date-time"
+        },
+        "hash": {
+          "type": "string",
+          "description": "A cryptographic hash of the certificate data for integrity checking."
+        },
+        "blockchainTxId": {
+          "type": "string",
+          "description": "The transaction ID on the blockchain where the certificate hash is anchored."
+        },
+        "status": {
+          "type": "string",
+          "description": "The approval status of the certificate, managed by the Admin.",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "studentId",
+        "principalId",
+        "studentName",
+        "studentEmail",
+        "rollNumber",
+        "mobileNumber",
+        "branch",
+        "passingYear",
+        "passingPercentage",
+        "timestamp",
+        "hash",
+        "status"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/entities/Admin"
+          },
+          "description": "Stores administrator user accounts.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "Unique identifier for the administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/principals/{principalId}",
+        "definition": {
+          "entityName": "Principal",
+          "schema": {
+            "$ref": "#/entities/Principal"
+          },
+          "description": "Stores principal user accounts.",
+          "params": [
+            {
+              "name": "principalId",
+              "description": "Unique identifier for the principal."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/entities/Student"
+          },
+          "description": "Stores student accounts. `principalId` links them to their institution.",
+          "params": [
+            {
+              "name": "studentId",
+              "description": "Unique identifier for the student."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/employers/{employerId}",
+        "definition": {
+          "entityName": "Employer",
+          "schema": {
+            "$ref": "#/entities/Employer"
+          },
+          "description": "Stores employer user accounts.",
+          "params": [
+            {
+              "name": "employerId",
+              "description": "Unique identifier for the employer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/certificates/{certificateId}",
+        "definition": {
+          "entityName": "Certificate",
+          "schema": {
+            "$ref": "#/entities/Certificate"
+          },
+          "description": "Stores certificates. Includes denormalized data for display and historical accuracy.",
+          "params": [
+            {
+              "name": "certificateId",
+              "description": "Unique identifier for the certificate."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed for a role-based system. Each user role (Admin, Principal, Student, Employer) has its own top-level collection for clear data separation and security rule simplicity. The `students` collection is now top-level, with a `principalId` field to maintain the link to their institution, which simplifies queries for admins and principals. The `certificates` collection is heavily denormalized, storing a snapshot of student information at the time of issuance. This is critical for historical accuracy and simplifies the verification process, as a certificate document contains all necessary information for display without requiring joins or lookups to the student record."
+  }
+}

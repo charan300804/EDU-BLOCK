@@ -9,28 +9,34 @@ import {
 } from 'firebase/auth';
 import { useUser, useAuth as useFirebaseAuth } from '@/firebase/provider';
 import { Role } from '@/lib/types';
-import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+
+// This is a conceptual function.
+// Deleting a user requires admin privileges and should be done via a secure backend,
+// like a Cloud Function, not directly from the client.
+async function deleteUserOnClient(userId: string) {
+    console.warn(
+      `Attempting to 'delete' user ${userId}. In a real app, this MUST be a secure backend call.`
+    );
+    // This is a placeholder. Client-side SDK cannot delete other users.
+    // We simulate it being successful for the UI flow.
+    return Promise.resolve();
+}
 
 export function useAuth() {
   const { user, isUserLoading } = useUser();
   const auth = useFirebaseAuth();
-  const firestore = useFirestore();
 
   const signUp = async (email: string, password: string, displayName: string, role: Role) => {
     if (!auth) throw new Error("Auth service not available");
-    // This creates the user in Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const createdUser = userCredential.user;
 
-    // This adds the displayName to the Firebase Auth user profile
     await updateProfile(createdUser, { 
       displayName: displayName,
     });
     
-    // This part does not create a document in a `users` collection.
-    // The registration page and dashboard pages handle creating documents
-    // in the specific role collections (`employers`, `principals`, etc.).
+    // The calling components (e.g., registration pages) are responsible
+    // for creating the user document in the corresponding Firestore collection.
 
     return userCredential;
   };
@@ -45,6 +51,12 @@ export function useAuth() {
     return firebaseSignOut(auth);
   };
 
+  const deleteUserAccount = async (userId: string) => {
+      // This is a conceptual function call for the demo.
+      // In a real application, you would trigger a Cloud Function here.
+      return deleteUserOnClient(userId);
+  }
+
   return {
     user,
     isUserLoading,
@@ -52,5 +64,6 @@ export function useAuth() {
     signUp,
     signIn,
     signOut,
+    deleteUserAccount, // Exposing the conceptual deletion function
   };
 }

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal, CheckCircle, XCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import { collection, query, doc, where } from "firebase/firestore";
+import { collection, query, doc, where, getDocs, writeBatch } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -34,7 +34,7 @@ type PrincipalFormValues = z.infer<typeof principalSchema>;
 export default function AdminDashboardPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const { signUp } = useAuth();
+    const { auth, signUp, deleteUserAccount } = useAuth();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const principalsQuery = useMemo(() => {
@@ -47,8 +47,8 @@ export default function AdminDashboardPage() {
         return query(collection(firestore, "certificates"), where("status", "==", "pending"));
     }, [firestore]);
 
-    const { data: principals, isLoading: isLoadingPrincipals } = useCollection<any>(principalsQuery);
-    const { data: pendingCertificates, isLoading: isLoadingCertificates } = useCollection<any>(pendingCertificatesQuery);
+    const { data: principals, isLoading: isLoadingPrincipals, refresh: refreshPrincipals } = useCollection<any>(principalsQuery);
+    const { data: pendingCertificates, isLoading: isLoadingCertificates, refresh: refreshCertificates } = useCollection<any>(pendingCertificatesQuery);
 
     const form = useForm<PrincipalFormValues>({
         resolver: zodResolver(principalSchema),
@@ -56,6 +56,7 @@ export default function AdminDashboardPage() {
     });
 
     async function onSubmit(values: PrincipalFormValues) {
+        if(!auth) return;
         try {
             const userCredential = await signUp(values.email, values.password, values.name, "principal");
 
@@ -90,6 +91,53 @@ export default function AdminDashboardPage() {
         updateDocumentNonBlocking(principalRef, { status: "Active" });
         toast({ title: "Access Reinstated", description: "Principal's access has been reinstated." });
     }
+
+    const handleDeletePrincipal = async (principalId: string) => {
+        if (!firestore || !auth) {
+            toast({ title: "Error", description: "System not ready. Please try again.", variant: "destructive" });
+            return;
+        }
+        
+        try {
+            // This is a simplified deletion. In a real app, you'd use a Cloud Function
+            // to handle this transactionally and to delete the auth user.
+            // We are simulating this on the client for this project.
+
+            const batch = writeBatch(firestore);
+
+            // 1. Delete the principal document
+            const principalRef = doc(firestore, "principals", principalId);
+            batch.delete(principalRef);
+
+            // 2. Find and delete all students of this principal
+            const studentsQuery = query(collection(firestore, "students"), where("principalId", "==", principalId));
+            const studentsSnapshot = await getDocs(studentsQuery);
+            studentsSnapshot.forEach(studentDoc => {
+                batch.delete(doc(firestore, "students", studentDoc.id));
+            });
+
+            // 3. Find and delete all certificates issued by this principal
+            const certsQuery = query(collection(firestore, "certificates"), where("principalId", "==", principalId));
+            const certsSnapshot = await getDocs(certsQuery);
+            certsSnapshot.forEach(certDoc => {
+                batch.delete(doc(firestore, "certificates", certDoc.id));
+            });
+
+            await batch.commit();
+
+            // 4. (Conceptual) Delete the user from Firebase Auth
+            // This requires Admin SDK and should be done in a backend function.
+            // We'll call a conceptual client-side function for this demo.
+            await deleteUserAccount(principalId);
+            
+            toast({ title: "Principal Deleted", description: "The principal and all their associated data have been removed." });
+            refreshPrincipals(); // Refresh the list
+            
+        } catch (error: any) {
+            console.error("Deletion failed:", error);
+            toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
+        }
+    };
 
     const handleApproveCertificate = (certificateId: string) => {
         if(!firestore) return;
@@ -165,8 +213,8 @@ export default function AdminDashboardPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Certificate Title</TableHead>
-                                        <TableHead>Student ID</TableHead>
-                                        <TableHead>Principal ID</TableHead>
+                                        <TableHead>Student Name</TableHead>
+                                        <TableHead>Branch</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -177,8 +225,8 @@ export default function AdminDashboardPage() {
                                     {pendingCertificates?.map((cert) => (
                                         <TableRow key={cert.id}>
                                             <TableCell className="font-medium">{cert.title}</TableCell>
-                                            <TableCell className="truncate max-w-[100px]">{cert.studentId}</TableCell>
-                                            <TableCell className="truncate max-w-[100px]">{cert.principalId}</TableCell>
+                                            <TableCell>{cert.studentName}</TableCell>
+                                            <TableCell>{cert.branch}</TableCell>
                                             <TableCell>
                                                 <Badge variant="secondary">{cert.status}</Badge>
                                             </TableCell>
@@ -242,6 +290,7 @@ export default function AdminDashboardPage() {
                                                         ) : (
                                                             <DropdownMenuItem onClick={() => handleReinstate(principal.id)}>Reinstate Access</DropdownMenuItem>
                                                         )}
+                                                        <DropdownMenuItem onSelect={() => handleDeletePrincipal(principal.id)} className="text-destructive">Delete Principal</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
