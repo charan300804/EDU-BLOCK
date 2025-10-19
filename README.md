@@ -6,7 +6,7 @@ Welcome to EduChain! This is a secure certificate verification platform built wi
 
 1.  [How It Works: The Technology Stack](#how-it-works-the-technology-stack)
 2.  [Step 1: Install Prerequisites](#step-1-install-prerequisites)
-3.  [Step 2: Set Up Your Firebase Backend](#step-2-set-up-your-firebase-backend)
+3.  [Step 2: Understand the Firebase Setup](#step-2-understand-the-firebase-setup)
 4.  [Step 3: Configure AI Features with an Environment File](#step-3-configure-ai-features-with-an-environment-file)
 5.  [Step 4: Install Project Dependencies](#step-4-install-project-dependencies)
 6.  [Step 5: Run the Development Servers](#step-5-run-the-development-servers)
@@ -16,7 +16,7 @@ Welcome to EduChain! This is a secure certificate verification platform built wi
 
 ## How It Works: The Technology Stack
 
-This application has two main parts that work together:
+This application has two main parts that work together, and you'll need to run them separately:
 
 *   **Next.js Frontend**: This is the user interface of the web application that you see and interact with in your browser. It includes all the pages, dashboards, and components.
 *   **Genkit AI Backend**: This is a separate service that handles the AI-powered features, like the "Career Advisor." It runs independently and responds to requests from the frontend.
@@ -31,20 +31,26 @@ Before you can run the project, you need a few essential tools installed on your
 
 *   **Node.js**: This is a JavaScript runtime that allows you to run JavaScript code outside of a web browser. It's the foundation for our entire application.
     *   **Recommendation**: Use version 18 or later.
-    *   **How to get it**: Download and install it from [nodejs.org](https://nodejs.org/).
+    *   **How to get it**: Download and install it from [nodejs.org](https://nodejs.org/). This will also install `npm`.
 
 *   **npm (Node Package Manager)**: This tool is automatically included with your Node.js installation. It helps you download and manage the "packages" or libraries of code that our project depends on.
 
-*   **A Google Account**: This is required to create and manage the Firebase project, which provides our backend database and authentication services.
+*   **A Google Account**: This is required to get an API key for the AI features.
 
 ---
 
-## Step 2: Set Up Your Firebase Backend
+## Step 2: Understand the Firebase Setup
 
-This application uses Firebase to handle user accounts (authentication) and store data (Firestore database). The initial setup has already been configured to connect to a specific Firebase project.
+This application uses Firebase to handle user accounts (authentication) and store data (Firestore database).
 
-*   The client-side configuration, which tells the frontend how to connect to Firebase, is located in `src/firebase/config.ts`.
-*   The backend services like Firestore and Authentication are automatically connected when you run the application. No further action is needed here.
+**Do I need to get any files from the Firebase Console?**
+
+**No, not for this project.** The connection details for Firebase have already been pre-configured for you.
+
+*   The client-side configuration, which tells the frontend how to connect to Firebase, is already present in the file `src/firebase/config.ts`.
+*   The backend services like the database and authentication are automatically connected when you run the application using this configuration.
+
+In a typical project you build from scratch, you would need to go to the [Firebase Console](https://console.firebase.google.com/), create a new project, register a new web application, and then Firebase would give you a configuration object (called `firebaseConfig`) to copy into your project. For your convenience, that step has already been done.
 
 ---
 
@@ -54,11 +60,11 @@ The application's AI Career Advisor uses Genkit, which is powered by the Google 
 
 #### a. What is a `.env` file?
 
-A `.env` file is a plain text file used to store "environment variables." Think of these as secret keys or configuration settings that your application needs to run but shouldn't be hard-coded directly into the source code for security reasons. Our application is already programmed to look for a `.env` file in the root directory.
+A `.env` file is a plain text file used to store "environment variables." Think of these as secret keys or configuration settings that your application needs to run but shouldn't be hard-coded directly into the source code for security reasons. Our application is already programmed to look for this file in the root directory.
 
 #### b. Create the `.env` file
 
-In the **root directory** of your project (the main folder containing `package.json` and this `README.md`), create a new file and name it exactly:
+In the **root directory** of your project (the same folder that contains this `README.md` file), create a new file and name it exactly:
 
 ```
 .env
@@ -68,11 +74,12 @@ In the **root directory** of your project (the main folder containing `package.j
 
 1.  Open your web browser and navigate to **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
 2.  Sign in with your Google account.
-3.  Click the **"Create API key"** button. This will generate a long string of text—this is your secret key. Copy it to your clipboard.
+3.  Click the **"Create API key"** button. This will generate a long string of text—this is your secret key.
+4.  **Copy this key** to your clipboard.
 
 #### d. Add the Key to your `.env` file
 
-1.  Open the `.env` file you created in your code editor.
+1.  Open the `.env` file you just created in your code editor.
 2.  Add the following line. Be sure to replace `your_api_key_here` with the actual key you copied from the Google AI Studio.
 
     ```
@@ -85,7 +92,7 @@ In the **root directory** of your project (the main folder containing `package.j
 
 ## Step 4: Install Project Dependencies
 
-Now it's time to download all the external code libraries the project needs to run. The `package.json` file in the project root contains a list of all these dependencies.
+Now it's time to download all the external code libraries the project needs to run. The `package.json` file in the project root contains a complete list of all these dependencies.
 
 1.  Open your terminal or command prompt.
 2.  Make sure you are in the root directory of the project.
@@ -95,7 +102,7 @@ Now it's time to download all the external code libraries the project needs to r
     npm install
     ```
 
-This command reads the `package.json` file and downloads all the necessary packages into a new folder called `node_modules`. This might take a few minutes.
+This command reads the `package.json` file and downloads all the necessary packages into a new folder called `node_modules`. This might take a few minutes. You only need to do this once, unless you add new dependencies later.
 
 ---
 
@@ -113,13 +120,15 @@ This server runs the main web application—the part you see and interact with.
     npm run dev
     ```
 
-2.  **Expected Output**: The terminal will show several messages. When it's ready, you'll see something like this, indicating the server has started successfully:
+2.  **What does this do?** This command tells Next.js to start a development server, which compiles the code and makes the website available locally. The `--turbopack` flag makes it extra fast, and `-p 9002` tells it to run on port 9002.
+
+3.  **Expected Output**: The terminal will show several messages. When it's ready, you'll see something like this, indicating the server has started successfully:
 
     ```
     - ready started server on 0.0.0.0:9002, url: http://localhost:9002
     ```
 
-The frontend is now running and accessible. **Do not close this terminal window.**
+The frontend is now running. **Do not close this terminal window.**
 
 ### Terminal 2: Start the Genkit AI Server
 
@@ -131,14 +140,16 @@ This server runs the AI flows that power the Career Advisor feature. It listens 
     ```bash
     npm run genkit:dev
     ```
+    
+3.  **What does this do?** This command starts the Genkit development server, which makes your AI functions available as a local API that the Next.js frontend can call.
 
-3.  **Expected Output**: You will see messages indicating that the Genkit server (the "Flow Server") is running. It will typically be on port `3100`:
+4.  **Expected Output**: You will see messages indicating that the Genkit server (the "Flow Server") is running. It will typically be on port `3100`:
 
     ```
     [Flows] Flow Server is running at http://127.0.0.1:3100
     ```
 
-Now, both the frontend and the AI backend are running.
+Now, both the frontend and the AI backend are running and can communicate with each other.
 
 ---
 
@@ -147,7 +158,7 @@ Now, both the frontend and the AI backend are running.
 With both servers running, you can now explore the full application:
 
 1.  Open your web browser (like Chrome, Firefox, or Safari).
-2.  Navigate to **[http://localhost:9002](http://localhost:9002)**.
+2.  Navigate to the URL from your first terminal: **[http://localhost:9002](http://localhost:9002)**.
 3.  You should see the EduChain login page.
 4.  You can now register new users, log in with different roles (Student, Principal, Employer, Admin), and test all the features of the platform.
 
