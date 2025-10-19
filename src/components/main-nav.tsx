@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarFooter } from './ui/sidebar';
 import { Logo } from './icons/logo';
 import { UserNav } from './user-nav';
-import { Home, Shield, School, GraduationCap, Briefcase, UserPlus } from 'lucide-react';
+import { Home, Shield, School, GraduationCap, Briefcase } from 'lucide-react';
 import type { Role } from '@/lib/types';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
