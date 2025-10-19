@@ -2,12 +2,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, Fingerprint, Calendar, User, Award, Download, AlertTriangle, Percent, GraduationCap, Phone } from "lucide-react";
+import { Fingerprint, Calendar, User, Award, AlertTriangle, Percent, GraduationCap, Phone } from "lucide-react";
 import { useUser, useFirestore, useCollection } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 
 const statusConfig = {
     approved: { variant: "default", text: "Approved", icon: <Award className="h-10 w-10 text-primary"/> },
@@ -19,7 +17,6 @@ const statusConfig = {
 export default function StudentDashboardPage() {
     const { user } = useUser();
     const firestore = useFirestore();
-    const { toast } = useToast();
 
     const certificatesQuery = useMemo(() => {
         if (!user || !firestore) return null;
@@ -27,36 +24,6 @@ export default function StudentDashboardPage() {
     }, [user, firestore]);
 
     const { data: certificates, isLoading } = useCollection<any>(certificatesQuery);
-
-    const handleDownload = (certTitle: string, status: string) => {
-        if(status !== 'approved') {
-            toast({
-                title: "Cannot Download",
-                description: `This certificate is ${status} and cannot be downloaded.`,
-                variant: "destructive",
-            });
-            return;
-        }
-        toast({
-            title: "Download Initiated",
-            description: `Your certificate "${certTitle}" is being prepared for download.`,
-        });
-    }
-
-    const handleShowQR = (id: string, status: string) => {
-        if(status !== 'approved') {
-            toast({
-                title: "Cannot Show QR",
-                description: `This certificate is ${status} and cannot be verified.`,
-                variant: "destructive",
-            });
-            return;
-        }
-        toast({
-            title: "Certificate QR Code",
-            description: `Share this ID to allow verification: ${id}`,
-        });
-    }
 
   return (
     <div className="space-y-8">
@@ -71,7 +38,7 @@ export default function StudentDashboardPage() {
             <Card className="col-span-full">
                 <CardHeader>
                     <CardTitle>No Certificates Issued</CardTitle>
-                    <CardDescription>You do not have any certificates yet. Once your principal issues one, it will appear here.</CardDescription>
+                    <CardDescription>You do not have any certificates yet. Once your principal issues one and it's approved, it will appear here.</CardDescription>
                 </CardHeader>
             </Card>
         )}
@@ -104,14 +71,6 @@ export default function StudentDashboardPage() {
                     </div>
                     <div className="flex items-center justify-between mt-4 border-t pt-4">
                         <Badge variant={config.variant as any}>{config.text}</Badge>
-                        <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleDownload(cert.title, cert.status)} disabled={cert.status !== 'approved'}>
-                                <Download className="h-6 w-6 text-muted-foreground" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleShowQR(cert.id, cert.status)} disabled={cert.status !== 'approved'}>
-                                <QrCode className="h-6 w-6 text-muted-foreground" />
-                            </Button>
-                        </div>
                     </div>
                 </CardContent>
               </Card>
