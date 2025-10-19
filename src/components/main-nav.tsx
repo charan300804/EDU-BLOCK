@@ -1,3 +1,4 @@
+
 "use client"
 
 import { usePathname } from 'next/navigation';
@@ -30,7 +31,8 @@ const navItems = {
 
 export function MainNav() {
     const pathname = usePathname();
-    const role: Role = (pathname.split('/')[2] as Role) || 'student'; // mock role from URL
+    // FIXME: This is a mock role based on URL, replace with real auth state
+    const role: Role = (pathname.split('/')[2] as Role) || 'student';
     const currentNavItems = navItems[role] || navItems.student;
 
     return (
@@ -45,7 +47,7 @@ export function MainNav() {
                 <SidebarMenu>
                     {currentNavItems.map((item) => (
                         <SidebarMenuItem key={item.label}>
-                            <SidebarMenuButton asChild isActive={pathname === item.href && item.label !=='Dashboard' } tooltip={item.label}>
+                            <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
                                 <Link href={item.href}>
                                     {item.icon}
                                     <span>{item.label}</span>

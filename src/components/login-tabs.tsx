@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -72,8 +73,7 @@ function LoginForm({ role }: { role: Role }) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(`Logging in as ${role}...`, values);
     // Simulate successful login and redirect
-    const dashboardPath = role === 'student' ? '/dashboard/student' : `/dashboard/${role}`;
-    router.push(dashboardPath);
+    router.push(`/dashboard/${role}`);
   }
 
   return (
