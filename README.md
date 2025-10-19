@@ -5,12 +5,13 @@ Welcome to EduChain! This is a secure certificate verification platform built wi
 ## Table of Contents
 
 1.  [How It Works: The Technology Stack](#how-it-works-the-technology-stack)
-2.  [Step 1: Install Prerequisites](#step-1-install-prerequisites)
-3.  [Step 2: Understand the Firebase Setup](#step-2-understand-the-firebase-setup)
-4.  [Step 3: Configure AI Features with an Environment File](#step-3-configure-ai-features-with-an-environment-file)
-5.  [Step 4: Install Project Dependencies](#step-4-install-project-dependencies)
-6.  [Step 5: Run the Development Servers](#step-5-run-the-development-servers)
-7.  [Step 6: Access and Use the Application](#step-6-access-and-use-the-application)
+2.  [Application Workflow and User Roles](#application-workflow-and-user-roles)
+3.  [Step 1: Install Prerequisites](#step-1-install-prerequisites)
+4.  [Step 2: Understand the Firebase Setup](#step-2-understand-the-firebase-setup)
+5.  [Step 3: Configure AI Features with an Environment File](#step-3-configure-ai-features-with-an-environment-file)
+6.  [Step 4: Install Project Dependencies](#step-4-install-project-dependencies)
+7.  [Step 5: Run the Development Servers](#step-5-run-the-development-servers)
+8.  [Step 6: Access and Use the Application](#step-6-access-and-use-the-application)
 
 ---
 
@@ -22,6 +23,67 @@ This application has two main parts that work together, and you'll need to run t
 *   **Genkit AI Backend**: This is a separate service that handles the AI-powered features, like the "Career Advisor." It runs independently and responds to requests from the frontend.
 
 Because of this structure, you will need to run **two separate commands in two separate terminals** to start both the frontend and the AI backend.
+
+---
+
+## Application Workflow and User Roles
+
+EduChain is a role-based system designed for the secure creation, management, and verification of educational certificates. Here’s how the application flows and what each role can do.
+
+### General Workflow
+
+1.  **Login/Registration**: The application starts at the login page. Users select their specific role (Student, Principal, Employer, or Admin) from the tabs to log in. Employers have a unique ability to register for a new account directly from the login page.
+2.  **Authentication**: The system uses Firebase Authentication to manage user accounts. Upon successful login, the application identifies the user's role and directs them to their personalized dashboard.
+3.  **Certificate Lifecycle**:
+    *   **Issuance**: Principals issue certificates to students.
+    *   **Viewing**: Students view their issued certificates.
+    *   **Verification**: Employers verify the authenticity of a certificate.
+    *   **Oversight**: Admins oversee the entire system.
+
+---
+
+### Role-Specific Workflows
+
+#### 1. Admin
+
+The Admin role has the highest level of oversight and is responsible for managing the educational institutions that use the platform.
+
+*   **Login**: The Admin logs in using their credentials on the "Admin" tab.
+*   **Dashboard**: The Admin dashboard's primary function is to manage **Principals**.
+    *   **Create Principal**: An Admin can create a new Principal account by providing their name, email, school name, and a temporary password. This allows a new school/institution to join the platform.
+    *   **Manage Principals**: The Admin can view a list of all existing Principals. From this list, they can **revoke** a Principal's access (making them inactive) or **reinstate** it.
+    *   **Audit Logs**: The Admin can navigate to the **Audit Logs** page to view a system-wide, read-only log of important actions, such as when certificates are issued or verified. This is crucial for security and compliance.
+
+#### 2. Principal
+
+The Principal represents an educational institution and is responsible for managing students and issuing certificates.
+
+*   **Login**: The Principal logs in using the credentials created for them by an Admin.
+*   **Dashboard**: The Principal dashboard is organized into three main functions:
+    *   **Create Student**: The Principal can create new student accounts by providing a name, email, and password. This allows students to log in and view their certificates.
+    *   **Manage Students**: The Principal can view a list of all students associated with their institution and can delete student accounts if needed.
+    *   **Issue Certificate**: This is a core function. The Principal selects a student from a dropdown list, enters the title of the certificate (e.g., "B.Tech Computer Science"), and issues it. This action creates a new, secure certificate record in the Firestore database, linked to both the student and the principal.
+
+#### 3. Student
+
+The Student is the recipient of the certificates. Their workflow is focused on viewing their achievements and seeking guidance.
+
+*   **Login**: The Student logs in using the credentials created for them by their Principal.
+*   **Dashboard**:
+    *   **My Certificates**: The main dashboard displays a list of all certificates that have been issued to the student. Each certificate card shows the title, issuing date, and a unique hash for verification. From here, the student can:
+        *   **Show QR Code**: Displays the unique certificate ID, which can be shared with an employer for verification.
+        *   **Download**: A placeholder to simulate downloading a PDF of the certificate.
+    *   **Career Guidance**: Students can navigate to this page to use the **AI Career Advisor**. They select one of their earned certificates, and the AI provides personalized suggestions for relevant job titles and future learning paths.
+
+#### 4. Employer
+
+The Employer's role is to verify the authenticity of certificates presented by potential job candidates.
+
+*   **Registration & Login**: Employers can register for a new account directly from the main page. After registering, they can log in via the "Employer" tab.
+*   **Dashboard**: The Employer dashboard is focused on a single task: verification.
+    *   **Manual Verification**: The employer can enter a unique **Certificate ID** (provided by a student) into a search bar and click "Verify." This queries the database to confirm the certificate's details and validity.
+    *   **QR Code Scanning**: The employer can click "Scan QR Code" to activate their device's camera. They can then scan a QR code presented by a student to automatically perform the verification.
+    *   **Verification Result**: After verification, the employer is taken to a results page that clearly states if the certificate is **Valid**, **Tampered**, or **Not Found**, and displays the authentic certificate details if it is valid.
 
 ---
 
