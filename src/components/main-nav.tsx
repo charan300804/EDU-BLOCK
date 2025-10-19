@@ -4,24 +4,24 @@ import { usePathname } from 'next/navigation';
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel } from './ui/sidebar';
 import { Logo } from './icons/logo';
 import { UserNav } from './user-nav';
-import { Home, Shield, School, GraduationCap, Briefcase, ChevronDown } from 'lucide-react';
+import { Home, Shield, School, GraduationCap, Briefcase, ChevronDown, UserPlus } from 'lucide-react';
 import type { Role } from '@/lib/types';
 import Link from 'next/link';
 
 const navItems = {
     admin: [
         { href: "/dashboard/admin", icon: <Home />, label: "Dashboard" },
-        { href: "#", icon: <School />, label: "Manage Principals" },
-        { href: "#", icon: <Shield />, label: "Audit Logs" },
+        { href: "/dashboard/admin", icon: <School />, label: "Manage Principals" },
+        { href: "/dashboard/admin", icon: <Shield />, label: "Audit Logs" },
     ],
     principal: [
         { href: "/dashboard/principal", icon: <Home />, label: "Dashboard" },
-        { href: "#", icon: <GraduationCap />, label: "Issue Certificate" },
-        { href: "#", icon: <School />, label: "Manage Students" },
+        { href: "/dashboard/principal", icon: <GraduationCap />, label: "Issue Certificate" },
+        { href: "/dashboard/principal", icon: <UserPlus />, label: "Create Student" },
     ],
     student: [
         { href: "/dashboard/student", icon: <Home />, label: "My Certificates" },
-        { href: "#", icon: <Briefcase />, label: "Career Guidance" },
+        { href: "/dashboard/student", icon: <Briefcase />, label: "Career Guidance" },
     ],
     employer: [
         { href: "/dashboard/employer", icon: <Home />, label: "Verify Certificate" },
@@ -45,7 +45,7 @@ export function MainNav() {
                 <SidebarMenu>
                     {currentNavItems.map((item) => (
                         <SidebarMenuItem key={item.label}>
-                            <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
+                            <SidebarMenuButton asChild isActive={pathname === item.href && item.label !=='Dashboard' } tooltip={item.label}>
                                 <Link href={item.href}>
                                     {item.icon}
                                     <span>{item.label}</span>
