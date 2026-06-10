@@ -8,6 +8,8 @@
 
 
 
+
+
 Welcome to EduBlock! This is a secure certificate verification platform built with Next.js, Firebase, and Genkit. This guide provides a detailed, beginner-friendly walkthrough to get the application running on your local development machine.
 
 ## Table of Contents
